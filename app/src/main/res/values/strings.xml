@@ -23,4 +23,10 @@
     <string name="message_text">I just visited %1$s on %2$s at %3$s!</string>
     <string name="send_message_title">Send message via</string>
     <string name="take_picture">Take Picture</string>
+
+    <string name="location">Location</string>
+    <string name="location_hint">Location information</string>
+    <string name="no_location">No Location</string>
+    <string name="title_activity_pirate_maps">Visited Pirate Places</string>
+    <string name="launch_map">Launch Map</string>
 </resources>

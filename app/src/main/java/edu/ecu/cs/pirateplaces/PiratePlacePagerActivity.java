@@ -1,6 +1,8 @@
 package edu.ecu.cs.pirateplaces;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +14,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +31,8 @@ public class PiratePlacePagerActivity extends AppCompatActivity
         implements PiratePlaceFragment.Callbacks
 {
     private static final String EXTRA_PIRATE_PLACE_ID = "edu.ecu.cs.pirateplaces.piratePlaceId";
+    private static final int REQUEST_ERROR = 0;
+
 
     private ViewPager mViewPager;
     private List<PiratePlace> mPiratePlaces;
@@ -79,5 +86,25 @@ public class PiratePlacePagerActivity extends AppCompatActivity
     public void onPiratePlaceDeleted(PiratePlace piratePlace)
     {
         this.finish();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int errorCode = apiAvailability.isGooglePlayServicesAvailable(this);
+
+        if(errorCode != ConnectionResult.SUCCESS){
+            Dialog errorDialog = apiAvailability.getErrorDialog(this, errorCode, REQUEST_ERROR,
+                    new DialogInterface.OnCancelListener() {
+                        @Override
+                        public void onCancel(DialogInterface dialogInterface) {
+                            finish();
+                        }
+                    }
+            );
+            errorDialog.show();
+        }
     }
 }

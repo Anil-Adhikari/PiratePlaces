@@ -12,6 +12,7 @@ import android.text.format.DateFormat;
 import java.io.File;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * View Model for binding of Pirate Place items
@@ -76,6 +77,37 @@ public class PiratePlaceViewModel extends BaseObservable
         mPiratePlace.setLastVisited(lastVisitedDate);
         mPirateBase.updatePiratePlace(mPiratePlace);
         notifyChange();
+    }
+
+    public String getLocation(){
+        if(mPiratePlace.hasLocation()){
+            String latitude = String.format(Locale.US,"%.6f", mPiratePlace.getLatitude());
+            String longitude = String.format(Locale.US, "%.6f", mPiratePlace.getLongitude());
+
+            return latitude + ", " + longitude;
+        }else{
+            return mContext.getString(R.string.no_location);
+        }
+
+    }
+
+    @Bindable
+    public void setLatitude(Double latitude){
+        mPiratePlace.setLatitude(latitude);
+        mPirateBase.updatePiratePlace(mPiratePlace);
+        notifyChange();
+    }
+
+    @Bindable
+    public void setLongitude(Double longitude){
+        mPiratePlace.setLongitude(longitude);
+        mPirateBase.updatePiratePlace(mPiratePlace);
+        notifyChange();
+    }
+
+    public void setHasLocation(boolean value){
+        mPiratePlace.setHasLocation(value);
+        mPirateBase.updatePiratePlace(mPiratePlace);
     }
 
     @Bindable

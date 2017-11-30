@@ -27,10 +27,16 @@ public class PirateCursorWrapper extends CursorWrapper
         String uuidString = getString(getColumnIndex(PiratePlaceTable.Cols.UUID));
         String placeName = getString(getColumnIndex(PiratePlaceTable.Cols.PLACE_NAME));
         long lastVisitedDate = getLong(getColumnIndex(PiratePlaceTable.Cols.LAST_VISITED_DATE));
+        int hasLocation = getInt(getColumnIndex(PiratePlaceTable.Cols.HAS_LOCATION));
+        double latitude = getDouble(getColumnIndex(PiratePlaceTable.Cols.LATITUDE));
+        double longitude = getDouble(getColumnIndex(PiratePlaceTable.Cols.LONGITUDE));
 
         PiratePlace piratePlace = new PiratePlace(UUID.fromString(uuidString));
         piratePlace.setPlaceName(placeName);
         piratePlace.setLastVisited(new Date(lastVisitedDate));
+        piratePlace.setHasLocation(hasLocation == 1);
+        piratePlace.setLatitude(latitude);
+        piratePlace.setLongitude(longitude);
 
         return piratePlace;
     }

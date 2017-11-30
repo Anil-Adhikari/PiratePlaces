@@ -21,6 +21,10 @@ public class PiratePlace implements Serializable
     /** The date the place was last visited */
     private Date mLastVisited;
 
+    private boolean hasLocation;
+    private double latitude;
+    private double longitude;
+
     /**
      * Create a default Pirate Place item
      *
@@ -40,6 +44,9 @@ public class PiratePlace implements Serializable
         mId = id;
         mPlaceName = "";
         mLastVisited = new Date();
+        hasLocation = false;
+        latitude = 0.0;
+        longitude = 0.0;
     }
 
     /**
@@ -113,5 +120,29 @@ public class PiratePlace implements Serializable
     public String getPhotoFilenameDir()
     {
         return "images/" + getId().toString();
+    }
+
+    public boolean hasLocation() {
+        return hasLocation;
+    }
+
+    public void setHasLocation(boolean hasLocation) {
+        this.hasLocation = hasLocation;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 }

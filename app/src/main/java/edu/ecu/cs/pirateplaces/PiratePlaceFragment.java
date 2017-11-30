@@ -7,12 +7,16 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -26,10 +30,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+
 import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.jar.Manifest;
 
 import edu.ecu.cs.pirateplaces.databinding.FragmentPiratePlaceBinding;
 import edu.ecu.cs.pirateplaces.databinding.FragmentPiratePlaceImageBinding;
@@ -40,8 +50,7 @@ import edu.ecu.cs.pirateplaces.databinding.FragmentPiratePlaceImageBinding;
  * @author Mark Hills (mhills@cs.ecu.edu)
  * @version 1.2
  */
-public class PiratePlaceFragment extends Fragment
-{
+public class PiratePlaceFragment extends Fragment {
     /** The tag for the ID of the Pirate Place to be edited */
     private static final String ARG_PLACE_ID = "place_id";
 
@@ -61,16 +70,22 @@ public class PiratePlaceFragment extends Fragment
     /** The data binding class used to communicate with the view */
     private FragmentPiratePlaceBinding mBinding;
 
+    private GoogleApiClient apiClient;
+
+    private static final String[] LOCATION_PERMISSIONS = new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION
+            , android.Manifest.permission.ACCESS_COARSE_LOCATION};
+    private static final int REQUEST_LOCATION_PERMISSIONS = 0;
+
     /**
      * Required interface for hosting activities.
      */
     public interface Callbacks {
         void onPiratePlaceUpdated(PiratePlace piratePlace);
+
         void onPiratePlaceDeleted(PiratePlace piratePlace);
     }
 
-    public static PiratePlaceFragment newInstance(UUID id)
-    {
+    public static PiratePlaceFragment newInstance(UUID id) {
         Bundle args = new Bundle();
         args.putSerializable(ARG_PLACE_ID, id);
 
@@ -85,22 +100,48 @@ public class PiratePlaceFragment extends Fragment
         mCallbacks = (Callbacks) context;
     }
 
-    public static UUID getUpdatedId(Intent data)
-    {
+    public static UUID getUpdatedId(Intent data) {
         return (UUID) data.getSerializableExtra(PiratePlaceFragment.ARG_PLACE_ID);
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState)
-    {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        apiClient = new GoogleApiClient.Builder(getActivity()).addApi(LocationServices.API)
+                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                    @Override
+                    public void onConnected(@Nullable Bundle bundle) {
+                        mBinding.checkInButton.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onConnectionSuspended(int i) {
+
+                    }
+                })
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        mBinding.checkInButton.setEnabled(false);
+        apiClient.connect();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        apiClient.disconnect();
     }
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         PirateBase pirateBase = PirateBase.getPirateBase(getActivity());
         mBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_pirate_place, container, false);
         mBinding.setViewModel(new PiratePlaceViewModel(pirateBase, getContext()));
@@ -108,37 +149,37 @@ public class PiratePlaceFragment extends Fragment
         UUID id = (UUID) getArguments().getSerializable(ARG_PLACE_ID);
         mBinding.getViewModel().setPiratePlace(pirateBase.getPiratePlace(id));
 
-        mBinding.piratePlaceName.addTextChangedListener(new TextWatcher()
-        {
+        mBinding.piratePlaceName.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after)
-            {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count)
-            {
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mBinding.getViewModel().setPlaceName(s.toString());
                 updatePiratePlace();
             }
 
             @Override
-            public void afterTextChanged(Editable s)
-            {
+            public void afterTextChanged(Editable s) {
 
             }
         });
 
         mBinding.piratePlaceLastVisited.setKeyListener(null);
 
-        mBinding.checkInButton.setOnClickListener(new View.OnClickListener()
-        {
+        mBinding.checkInButton.setEnabled(apiClient.isConnected());
+        mBinding.checkInButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 mBinding.getViewModel().setLastVisitedDate(new Date());
                 updatePiratePlace();
+                if (hasLocationPermission()) {
+                    findLocation();
+                } else {
+                    requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
+                }
             }
         });
 
@@ -153,11 +194,9 @@ public class PiratePlaceFragment extends Fragment
             }
         });
 
-        mBinding.editTime.setOnClickListener(new View.OnClickListener()
-        {
+        mBinding.editTime.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 FragmentManager manager = getFragmentManager();
                 TimePickerFragment dialog = TimePickerFragment
                         .newInstance(mBinding.getViewModel().getPiratePlace().getLastVisited());
@@ -166,17 +205,14 @@ public class PiratePlaceFragment extends Fragment
             }
         });
 
-        mBinding.sendToFriend.setOnClickListener(new View.OnClickListener()
-        {
+        mBinding.sendToFriend.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 Intent sendMessage =
                         new Intent(Intent.ACTION_SEND)
-                        .setType("text/plain")
-                        .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.message_subject))
-                        .putExtra(Intent.EXTRA_TEXT, getMessageText())
-                        ;
+                                .setType("text/plain")
+                                .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.message_subject))
+                                .putExtra(Intent.EXTRA_TEXT, getMessageText());
                 sendMessage = Intent.createChooser(sendMessage, getString(R.string.send_message_title));
                 startActivity(sendMessage);
             }
@@ -186,7 +222,53 @@ public class PiratePlaceFragment extends Fragment
 
         updateUI();
 
+        mBinding.pirateplaceLocation.setKeyListener(null);
+
         return mBinding.getRoot();
+    }
+
+    private void findLocation() {
+        LocationRequest request = LocationRequest.create();
+        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        request.setNumUpdates(1);
+        request.setInterval(0);
+        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                apiClient, request, new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        mBinding.getViewModel().setLatitude(location.getLatitude());
+                        mBinding.getViewModel().setLongitude(location.getLongitude());
+                        mBinding.getViewModel().setHasLocation(true);
+                    }
+                });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case REQUEST_LOCATION_PERMISSIONS:
+                if(hasLocationPermission()){
+                    findLocation();
+                }
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private boolean hasLocationPermission(){
+        int result = ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]);
+        return result == PackageManager.PERMISSION_GRANTED;
     }
 
     protected void updateUI() {

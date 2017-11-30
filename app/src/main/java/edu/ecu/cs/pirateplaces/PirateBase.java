@@ -180,6 +180,9 @@ public class PirateBase
         values.put(PiratePlaceTable.Cols.UUID, piratePlace.getId().toString());
         values.put(PiratePlaceTable.Cols.PLACE_NAME, piratePlace.getPlaceName());
         values.put(PiratePlaceTable.Cols.LAST_VISITED_DATE, piratePlace.getLastVisited().getTime());
+        values.put(PiratePlaceTable.Cols.LATITUDE, piratePlace.getLatitude());
+        values.put(PiratePlaceTable.Cols.LONGITUDE, piratePlace.getLongitude());
+        values.put(PiratePlaceTable.Cols.HAS_LOCATION, piratePlace.hasLocation());
 
         return values;
     }

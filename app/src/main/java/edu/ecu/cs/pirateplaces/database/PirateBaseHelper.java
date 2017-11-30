@@ -29,7 +29,12 @@ public class PirateBaseHelper extends SQLiteOpenHelper
             " _id integer primary key autoincrement, " +
             PiratePlaceTable.Cols.UUID + ", " +
             PiratePlaceTable.Cols.PLACE_NAME + ", " +
-            PiratePlaceTable.Cols.LAST_VISITED_DATE + ")");
+            PiratePlaceTable.Cols.LAST_VISITED_DATE + ", " +
+            PiratePlaceTable.Cols.HAS_LOCATION + ", " +
+            PiratePlaceTable.Cols.LATITUDE + ", "  +
+            PiratePlaceTable.Cols.LONGITUDE
+                + ")"
+        );
     }
 
     @Override

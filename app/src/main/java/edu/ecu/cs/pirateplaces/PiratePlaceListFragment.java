@@ -101,6 +101,10 @@ public class PiratePlaceListFragment extends Fragment
                 PirateBase.getPirateBase(getActivity()).addPiratePlace(piratePlace);
                 mCallbacks.onPiratePlaceSelected(piratePlace);
                 return true;
+            case R.id.launch_map:
+                Intent intent = new Intent(getActivity(), PirateMapsActivity.class);
+                startActivity(intent);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }

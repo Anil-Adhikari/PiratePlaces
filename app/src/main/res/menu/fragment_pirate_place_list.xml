@@ -6,4 +6,10 @@
     android:icon="@drawable/ic_menu_add"
     android:title="@string/add_place"
     app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/launch_map"
+        android:icon="@drawable/ic_launch_map"
+        android:title="@string/launch_map"
+        app:showAsAction="ifRoom|withText" />
 </menu>
