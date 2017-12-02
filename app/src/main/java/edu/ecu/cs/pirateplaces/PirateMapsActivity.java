@@ -49,23 +49,19 @@ public class PirateMapsActivity extends FragmentActivity implements OnMapReadyCa
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        /*LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
-
         mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
             @Override
             public void onMapLoaded() {
-
+                LatLngBounds.Builder latlangbuilder = new LatLngBounds.Builder();
                 for(PiratePlace place: piratePlaceList){
                     LatLng location = new LatLng(place.getLatitude(), place.getLongitude());
+                    latlangbuilder.include(location);
                     mMap.addMarker(new MarkerOptions().position(location).icon(BitmapDescriptorFactory.defaultMarker()));
-                    LatLngBounds bounds = new LatLngBounds.Builder().include(location).build();
-                    int margin = getResources().getDimensionPixelSize(R.dimen.map_inset_margin);
-                    CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, margin);
-                    mMap.animateCamera(update);
                 }
+                LatLngBounds bounds = latlangbuilder.build();
+                int margin = getResources().getDimensionPixelSize(R.dimen.map_inset_margin);
+                CameraUpdate update = CameraUpdateFactory.newLatLngBounds(bounds, margin);
+                mMap.animateCamera(update);
 
             }
         });
