@@ -72,6 +72,7 @@ public class PiratePlaceListActivity extends SingleFragmentActivity
         }
     }
 
+    // Checking GoogleApiAvailability
     @Override
     protected void onResume() {
         super.onResume();

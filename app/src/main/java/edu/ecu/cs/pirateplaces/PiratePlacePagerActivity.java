@@ -88,6 +88,7 @@ public class PiratePlacePagerActivity extends AppCompatActivity
         this.finish();
     }
 
+    // double checking GoogleApiAvailability
     @Override
     protected void onResume() {
         super.onResume();

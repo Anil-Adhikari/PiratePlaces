@@ -175,11 +175,12 @@ public class PiratePlaceFragment extends Fragment {
             public void onClick(View v) {
                 mBinding.getViewModel().setLastVisitedDate(new Date());
                 updatePiratePlace();
-                if (hasLocationPermission()) {
+                findLocation();
+                /*if (hasLocationPermission()) {
                     findLocation();
                 } else {
                     requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
-                }
+                }*/
             }
         });
 
@@ -232,17 +233,13 @@ public class PiratePlaceFragment extends Fragment {
         request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         request.setNumUpdates(1);
         request.setInterval(0);
-        if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+
+        // If this check is not done here, LocationService.FusedLocationApi... gives error
+        if (ContextCompat.checkSelfPermission(getActivity(), LOCATION_PERMISSIONS[0]) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(LOCATION_PERMISSIONS, REQUEST_LOCATION_PERMISSIONS);
             return;
         }
+
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 apiClient, request, new LocationListener() {
                     @Override
